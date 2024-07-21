@@ -29,11 +29,19 @@ namespace ChatApp.Services
 
         public async Task<List<Message>> GetMessagesAsync(string currentUserId, string receiverId)
         {
-            return await _context.Messages
+            var messages =  await _context.Messages
                 .Where(m => (m.SenderId == currentUserId && m.ReceiverId == receiverId) ||
                             (m.SenderId == receiverId && m.ReceiverId == currentUserId))
                 .OrderBy(m => m.Timestamp)
                 .ToListAsync();
+
+            foreach (var message in messages)
+            {
+                // Chuyển đổi thời gian từ UTC sang múi giờ hiện tại
+                message.Timestamp = TimeZoneInfo.ConvertTimeFromUtc((DateTime)message.Timestamp, TimeZoneInfo.Local);
+            }
+
+            return messages;
         }
     }
 }

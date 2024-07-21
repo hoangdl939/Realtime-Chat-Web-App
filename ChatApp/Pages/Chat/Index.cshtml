@@ -112,6 +112,7 @@
                                 `;
                 }
                 document.getElementById("chatHistory").querySelector("ul").appendChild(msg);
+                scrollToBottom();
             });
 
             connection.start().catch(err => console.error(err.toString()));
@@ -161,6 +162,7 @@
                             }
                             chatHistory.appendChild(msg);
                         });
+                        scrollToBottom();   
                     });
             }
 
@@ -191,6 +193,7 @@
                                     <div class="message other-message float-right">${formattedMessageText}</div>
                                 `;
                     document.getElementById("chatHistory").querySelector("ul").appendChild(msg);
+                    scrollToBottom();
                 }
             }
 
@@ -213,6 +216,13 @@
                     }
                 });
             });
+
+            function scrollToBottom() {
+                const chatHistory = document.getElementById("chatHistory");
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+
+
         </script>
 
     }
