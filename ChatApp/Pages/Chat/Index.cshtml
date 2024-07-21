@@ -26,16 +26,16 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                             </div>
-                            <input type="text" class="form-control" placeholder="Search...">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search...">
                         </div>
                         <ul class="list-unstyled chat-list mt-2 mb-0">
                             @foreach (var user in Model.Users)
                             {
-                                <li class="clearfix" onclick="openChat('@user.Id', '@user.UserName')">
+                                <li class="clearfix" data-user-id="@user.Id" onclick="openChat('@user.Id', '@user.UserName')">
                                     <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
                                     <div class="about">
                                         <div class="name">@user.UserName</div>
-                                        <div class="status"> <i class="fa fa-circle online"></i> online </div>
+                                        <div class="status"> <i class="fa fa-circle online"></i>  Click to chat</div>
                                     </div>
                                 </li>
                             }
@@ -55,6 +55,7 @@
                             </div>
                         </div>
                         <div class="chat-history" id="chatHistory">
+                            <div class="start-chat-message">To start chatting, select a chat from the list.</div>
                             <ul class="m-b-0">
                             </ul>
                         </div>
@@ -84,7 +85,6 @@
                 const msg = document.createElement("li");
                 msg.classList.add("clearfix");
 
-                // Chuyển đổi timestamp thành định dạng mong muốn (ngày tháng năm và giờ phút)
                 const formattedTime = new Date(timestamp).toLocaleString([], {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -93,7 +93,6 @@
                     year: 'numeric'
                 });
 
-                // Thay thế ký tự xuống dòng bằng thẻ <br>
                 const formattedMessageText = messageText.replace(/\n/g, '<br>');
 
                 if (senderId === currentUserId) {
@@ -122,18 +121,18 @@
             function openChat(receiverId, userName) {
                 currentReceiverId = receiverId;
                 document.getElementById("chatWithUserName").innerText = userName;
-                // Load chat history
                 fetch(`./Chat/Index?handler=Messages&receiverId=${receiverId}`)
                     .then(response => response.json())
                     .then(messages => {
                         const chatHistory = document.getElementById("chatHistory").querySelector("ul");
                         chatHistory.innerHTML = '';
+                        const startChatMessage = document.querySelector(".start-chat-message");
+                        startChatMessage.style.display = 'none';
                         const currentUserId = '@User.FindFirstValue(ClaimTypes.NameIdentifier)';
                         messages.forEach(message => {
                             const msg = document.createElement("li");
                             msg.classList.add("clearfix");
 
-                            // Chuyển đổi timestamp thành định dạng mong muốn (ngày tháng năm và giờ phút)
                             const formattedTime = new Date(message.timestamp).toLocaleString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -142,7 +141,6 @@
                                 year: 'numeric'
                             });
 
-                            // Thay thế ký tự xuống dòng bằng thẻ <br>
                             const formattedMessageText = message.messageText.replace(/\n/g, '<br>');
 
                             if (message.senderId === currentReceiverId) {
@@ -176,7 +174,6 @@
                     const msg = document.createElement("li");
                     msg.classList.add("clearfix");
 
-                    // Lấy thời gian hiện tại và định dạng nó (ngày tháng năm và giờ phút)
                     const formattedTime = new Date().toLocaleString([], {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -185,7 +182,6 @@
                         year: 'numeric'
                     });
 
-                    // Thay thế ký tự xuống dòng bằng thẻ <br>
                     const formattedMessageText = messageText.replace(/\n/g, '<br>');
 
                     msg.innerHTML = `
@@ -205,6 +201,18 @@
                 }
             });
 
+            document.getElementById("searchInput").addEventListener("input", function () {
+                const filter = this.value.toLowerCase();
+                const users = document.querySelectorAll(".chat-list li");
+                users.forEach(user => {
+                    const userName = user.querySelector(".name").innerText.toLowerCase();
+                    if (userName.includes(filter)) {
+                        user.style.display = "";
+                    } else {
+                        user.style.display = "none";
+                    }
+                });
+            });
         </script>
 
     }

@@ -21,11 +21,16 @@
     top: 0;
     padding: 20px;
     z-index: 7;
+    height: calc(100vh - 40px); /* Điều chỉnh chiều cao danh sách người dùng */
+    overflow-y: auto; /* Thêm thanh cuộn dọc */
 }
 
 .chat-app .chat {
     margin-left: 280px;
     border-left: 1px solid #eaeaea;
+    height: calc(100vh - 40px); /* Điều chỉnh chiều cao phần chat */
+    display: flex;
+    flex-direction: column;
 }
 
 .people-list {
@@ -39,6 +44,8 @@
         padding: 10px 15px;
         list-style: none;
         border-radius: 3px;
+        display: flex;
+        flex-direction: column; /* Đảm bảo ảnh và tên không hiển thị trên cùng một dòng */
     }
 
         .people-list .chat-list li:hover {
@@ -57,6 +64,7 @@
     .people-list .chat-list img {
         width: 45px;
         border-radius: 50%;
+        display: block; /* Thêm thuộc tính này để đảm bảo ảnh và tên không hiển thị trên cùng một dòng */
     }
 
     .people-list img {
@@ -93,8 +101,9 @@
 .chat .chat-history {
     padding: 20px;
     border-bottom: 2px solid #fff;
-    height: 500px;
-    overflow-y: auto;
+    height: calc(100vh - 190px); /* Điều chỉnh chiều cao theo ý muốn */
+    overflow-y: auto; /* Thêm thanh cuộn dọc */
+    flex-grow: 1; /* Đảm bảo phần này chiếm toàn bộ không gian còn lại */
 }
 
     .chat .chat-history ul {
@@ -190,7 +199,6 @@
     padding: 10px;
     border: 1px solid #ddd;
 }
-
 
 .online,
 .offline,

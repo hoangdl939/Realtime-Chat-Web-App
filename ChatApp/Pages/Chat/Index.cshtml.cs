@@ -1,4 +1,5 @@
 using ChatApp.Data;
+using ChatApp.Hubs;
 using ChatApp.Models;
 using ChatApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -24,10 +25,15 @@ namespace ChatApp.Pages.Chats
 
         public List<IdentityUser> Users { get; set; }
         public List<Message> Messages { get; set; }
+       
 
         public async Task OnGetAsync()
         {
-            Users = await _identityContext.Users.ToListAsync();
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Users = await _identityContext.Users
+                        .Where(u => u.Id != currentUserId)
+                        .ToListAsync();
+
         }
 
         public async Task<IActionResult> OnGetMessagesAsync(string receiverId)
