@@ -1,0 +1,212 @@
+﻿@page
+@using System.Security.Claims
+@model ChatApp.Pages.Chats.IndexModel
+@{
+}
+
+<html>
+<head>
+    <title>Chat Box UI Design</title>
+    <link rel="stylesheet" href="~/css/chat.css" />
+
+    <!-- Import this CDN để sử dụng các biểu tượng -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="row clearfix">
+            <div class="col-lg-12">
+                <div class="card chat-app">
+                    <div id="plist" class="people-list">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control" placeholder="Search...">
+                        </div>
+                        <ul class="list-unstyled chat-list mt-2 mb-0">
+                            @foreach (var user in Model.Users)
+                            {
+                                <li class="clearfix" onclick="openChat('@user.Id', '@user.UserName')">
+                                    <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
+                                    <div class="about">
+                                        <div class="name">@user.UserName</div>
+                                        <div class="status"> <i class="fa fa-circle online"></i> online </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="chat">
+                        <div class="chat-header clearfix">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
+                                    </a>
+                                    <div class="chat-about">
+                                        <h6 class="m-b-0" id="chatWithUserName">Chat</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-history" id="chatHistory">
+                            <ul class="m-b-0">
+                            </ul>
+                        </div>
+                        <div class="chat-message clearfix">
+                            <div class="input-group mb-0">
+                                <textarea class="form-control" id="messageInput" placeholder="Chat here..."></textarea>
+                                <div class="input-group-append">
+                                    <button onclick="sendMessage()" class="btn btn-primary">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+        <script>
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .build();
+
+            connection.on("ReceiveMessage", (senderId, messageText, timestamp) => {
+                const currentUserId = '@User.FindFirstValue(ClaimTypes.NameIdentifier)';
+                const msg = document.createElement("li");
+                msg.classList.add("clearfix");
+
+                // Chuyển đổi timestamp thành định dạng mong muốn (ngày tháng năm và giờ phút)
+                const formattedTime = new Date(timestamp).toLocaleString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                // Thay thế ký tự xuống dòng bằng thẻ <br>
+                const formattedMessageText = messageText.replace(/\n/g, '<br>');
+
+                if (senderId === currentUserId) {
+                    msg.innerHTML = `
+                                    <div class="message-data text-right">
+                                        <span class="message-data-time">${formattedTime}</span>
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
+                                    </div>
+                                    <div class="message other-message float-right">${formattedMessageText}</div>
+                                `;
+                } else {
+                    msg.innerHTML = `
+                                    <div class="message-data">
+                                        <span class="message-data-time">${formattedTime}</span>
+                                    </div>
+                                    <div class="message my-message">${formattedMessageText}</div>
+                                `;
+                }
+                document.getElementById("chatHistory").querySelector("ul").appendChild(msg);
+            });
+
+            connection.start().catch(err => console.error(err.toString()));
+
+            let currentReceiverId;
+
+            function openChat(receiverId, userName) {
+                currentReceiverId = receiverId;
+                document.getElementById("chatWithUserName").innerText = userName;
+                // Load chat history
+                fetch(`./Chat/Index?handler=Messages&receiverId=${receiverId}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        const chatHistory = document.getElementById("chatHistory").querySelector("ul");
+                        chatHistory.innerHTML = '';
+                        const currentUserId = '@User.FindFirstValue(ClaimTypes.NameIdentifier)';
+                        messages.forEach(message => {
+                            const msg = document.createElement("li");
+                            msg.classList.add("clearfix");
+
+                            // Chuyển đổi timestamp thành định dạng mong muốn (ngày tháng năm và giờ phút)
+                            const formattedTime = new Date(message.timestamp).toLocaleString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            });
+
+                            // Thay thế ký tự xuống dòng bằng thẻ <br>
+                            const formattedMessageText = message.messageText.replace(/\n/g, '<br>');
+
+                            if (message.senderId === currentReceiverId) {
+                                msg.innerHTML = `
+                                                <div class="message-data">
+                                                    <span class="message-data-time">${formattedTime}</span>
+                                                </div>
+                                                <div class="message my-message">${formattedMessageText}</div>
+                                            `;
+                            } else {
+                                msg.innerHTML = `
+                                                <div class="message-data text-right">
+                                                    <span class="message-data-time">${formattedTime}</span>
+                                                    <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
+                                                </div>
+                                                <div class="message other-message float-right">${formattedMessageText}</div>
+                                            `;
+                            }
+                            chatHistory.appendChild(msg);
+                        });
+                    });
+            }
+
+            function sendMessage() {
+                const messageInput = document.getElementById("messageInput");
+                const messageText = messageInput.value;
+                if (messageText && currentReceiverId) {
+                    connection.invoke("SendMessage", currentReceiverId, messageText).catch(err => console.error(err.toString()));
+                    messageInput.value = '';
+
+                    const msg = document.createElement("li");
+                    msg.classList.add("clearfix");
+
+                    // Lấy thời gian hiện tại và định dạng nó (ngày tháng năm và giờ phút)
+                    const formattedTime = new Date().toLocaleString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+
+                    // Thay thế ký tự xuống dòng bằng thẻ <br>
+                    const formattedMessageText = messageText.replace(/\n/g, '<br>');
+
+                    msg.innerHTML = `
+                                    <div class="message-data text-right">
+                                        <span class="message-data-time">${formattedTime}</span>
+                                    </div>
+                                    <div class="message other-message float-right">${formattedMessageText}</div>
+                                `;
+                    document.getElementById("chatHistory").querySelector("ul").appendChild(msg);
+                }
+            }
+
+            document.getElementById("messageInput").addEventListener("keydown", function (event) {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+        </script>
+
+    }
+</body>
+</html>
